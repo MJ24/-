@@ -224,7 +224,7 @@ double getPostExpVal(const string &exp)
 bool isValidExp(const string &exp)
 {
 	stack<char> stk;
-	for (int i = 0; i < exp.size(); i++)
+	for (size_t i = 0; i < exp.size(); i++)
 	{
 		switch (exp.at(i))
 		{

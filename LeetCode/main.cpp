@@ -3,6 +3,7 @@
 #include <string>
 #include <stack>
 #include <queue>
+#include <vector>
 using namespace std;
 
 #pragma region 树的辅助函数
@@ -54,15 +55,13 @@ void output_impl(TreeNode* n, bool left, string const& indent)
 }
 void printTree(TreeNode* root)
 {
+	if (!root)
+		return;
 	if (root->right)
-	{
 		output_impl(root->right, false, "");
-	}
 	cout << root->val << endl;
 	if (root->left)
-	{
 		output_impl(root->left, true, "");
-	}
 }
 #pragma endregion
 
@@ -83,6 +82,26 @@ int addDigits(int num) {
 		int i = num % 9;
 		return i == 0 ? 9 : i;
 	}
+}
+//找出数组中唯二出现过奇数次的数，其他都出现偶数次。
+void printTwoOddNum(const vector<int> &vec)
+{
+	// 求出e=x^y
+	int e = 0;
+	for (auto n : vec)
+		e ^= n;
+	// 找到e中不为0的最低位k的位数
+	int k = 0;
+	while (!(e & (int)pow(2, k)))
+		++k;
+	// 求出其中一个数x
+	int x = 0;
+	for (auto n : vec)
+	{
+		if (n & (int)pow(2, k))
+			x ^= n;
+	}
+	cout << "两个数分别为：" << x << "," << (x^e) << endl;
 }
 #pragma endregion
 
@@ -275,7 +294,7 @@ int getTreeDepth(TreeNode* root) {
 	return lDep > rDep ? lDep + 1 : rDep + 1;
 }
 // 非递归用层序遍历思想求深度
-int TreeDepth(TreeNode* root)
+int getTreeDepthPro(TreeNode* root)
 {
 	if (root == NULL)
 		return 0;
@@ -290,17 +309,28 @@ int TreeDepth(TreeNode* root)
 			TreeNode *tmp = q.front();
 			q.pop();
 			if (tmp->left)
-			{
 				q.push(tmp->left);
-			}
 			if (tmp->right)
-			{
 				q.push(tmp->right);
-			}
 		}
 		res++;
 	}
 	return res;
+}
+bool isBalanceTree(TreeNode* root)
+{
+	if (!root)
+		return true;
+	int lh = 0, rh = 0;
+	if (isBalanceTree(root->left))
+		lh = getTreeDepth(root->left);
+	else
+		return false;
+	if (isBalanceTree(root->right))
+		rh = getTreeDepth(root->right);
+	else
+		return false;
+	return abs(lh - rh) < 2;
 }
 
 // 求搜索二叉树中两个节点的最近祖先节点
@@ -373,11 +403,25 @@ void testForLCA()
 	cout << lowestCommonAncestor2(node6, node9, node8)->val << " , ";
 	cout << lowestCommonAncestor2(node6, node4, node6)->val << endl;
 }
+// 求整棵树节点间的最大距离
+int getTreeMaxDistance(TreeNode *root)
+{
+	if (root == nullptr)
+		return 0;
+	else if (root->left == nullptr && root->right == nullptr)
+		return 0;
+	int dl = getTreeMaxDistance(root->left);
+	int dr = getTreeMaxDistance(root->right);
+	int dlr = getTreeDepth(root->left) + getTreeDepth(root->right);
+	if (dl > dr)
+		return dl > dlr ? dl : dlr;
+	else
+		return dr > dlr ? dr : dlr;
+}
 #pragma endregion
 
 int main()
 {
-	testStack();
 	system("pause");
 	return 0;
 }

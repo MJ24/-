@@ -3,6 +3,9 @@
 #include <string>
 #include <stack>
 #include <queue>
+#include <vector>
+#include <map>
+#include <unordered_map>
 using namespace std;
 
 #pragma region 树的辅助函数
@@ -82,6 +85,79 @@ int addDigits(int num) {
 	{
 		int i = num % 9;
 		return i == 0 ? 9 : i;
+	}
+}
+#pragma endregion
+
+#pragma region 字符串
+// 从srcStr中找到第一次出现的subStr的位置
+int strFind(string srcStr, string subStr)
+{
+	int m = srcStr.size(), n = subStr.size();
+	if (!n) return 0;
+	for (int i = 0; i != m - n + 1; ++i)
+	{
+		int j = 0;
+		for (; j != n; ++j)
+			if (srcStr.at(i + j) != subStr.at(j)) break;
+		if (j == n) return i;
+	}
+	return -1;
+}
+// 变形词问题，时间复杂度o(n)，空间复杂度o(1)
+bool isChangeWord(string s, string t)
+{
+	int size = s.size();
+	if (t.size() != size) return false;
+
+	int charArr[256] = { 0 }; //因为256是常数所以空间复杂度还是o(1)
+
+	for (int i = 0; i != size; ++i)
+	{
+		++charArr[s.at(i)];
+		--charArr[t.at(i)];
+	}
+
+	for (int i = 0; i != 256; ++i)
+		if (charArr[i]) return false;
+
+	return true;
+}
+// 判断A是不是包含B的所有字符，B中的重复字符也要在A中至少出现那么多次
+// 假设B中都是大写字母
+bool isAContainsB(string A, string B)
+{
+	int m = A.size(), n = B.size();
+	if (m < n) return false;
+
+	int charArr[26] = { 0 };
+
+	for (int i = 0; i != n; ++i)
+		++charArr[A.at(i) - 'A'];
+
+	for (int i = 0; i != m; ++i)
+	{
+		--charArr[B.at(i) - 'A'];
+		if (charArr[B.at(i) - 'A'] < 0) return false;
+	}
+	return true;
+}
+// 将许多单词按照变形词分组输出，属于变形词的为一组
+void groupChangeWords(const vector<string> &strs)
+{
+	unordered_map<string, vector<string>> umap;
+	for (string str : strs)
+	{
+		string tmp = str;
+		sort(tmp.begin(), tmp.end());
+		umap[tmp].push_back(str);
+	}
+
+	for (auto strsPair : umap)
+	{
+		for (string str : strsPair.second)
+			cout << str << " ";
+		cout << endl;
 	}
 }
 #pragma endregion
@@ -377,7 +453,9 @@ void testForLCA()
 
 int main()
 {
-	testStack();
+	//cout << strFind("asdfasdf", "sd") << endl;
+	//cout << isChangeWord("abcda", "bacdg") << endl;
+	//groupChangeWords({ "dcs", "csd", "cd", "c", "dc", "a", "zb", "dc", "c", "sdfsf" });
 	system("pause");
 	return 0;
 }

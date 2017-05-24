@@ -105,7 +105,6 @@ void printTwoOddNum(const vector<int> &vec)
 	}
 	cout << "两个数分别为：" << x << "," << (x^e) << endl;
 }
-}
 #pragma endregion
 
 #pragma region 字符串
@@ -496,11 +495,173 @@ int getTreeMaxDistance(TreeNode *root)
 }
 #pragma endregion
 
+#pragma region 动态规划
+// 上台阶
+int countSteps(int n)
+{
+	if (n < 1) return 0;
+	if (n == 1 || n == 2) return n;
+	return countSteps(n - 1) + countSteps(n - 2);
+}
+int countStepsDP(int n)
+{
+	if (n < 1) return 0;
+	if (n == 1 || n == 2) return n;
+
+	int *steps = new int[n] {1, 2};
+
+	for (int i = 2; i != n; ++i)
+		steps[i] = steps[i - 1] + steps[i - 2];
+
+	int res = steps[n - 1]; //注意这里是n-1
+	delete[] steps;
+	return res;
+}
+
+// 硬币凑整，给定各种面值的硬币存在数组arr中，求组成aim价值的钱有多少种组合
+int changeCoins(int S[], int m, int n)
+{
+	// 如果n为0，就找到了一个方案
+	if (n == 0)
+		return 1;
+	if (n < 0)
+		return 0;
+	// 没有硬币可用了，也返回0
+	if (m <= 0)
+		return 0;
+	// 按照上面的递归函数
+	return changeCoins(S, m - 1, n) + changeCoins(S, m, n - S[m - 1]);
+}
+
+int changeCoinsDP(int S[], int m, int n)
+{
+	int i, j, x, y;
+
+	// 通过自下而上的方式打表我们需要n+1行
+	// 最基本的情况是n=0
+	vector<vector<int> > table(n + 1, vector<int>(m));
+	//int table[n + 1][m];
+
+	// 初始化n=0的情况 (参考上面的递归程序)
+	for (i = 0; i < m; i++)
+		table[0][i] = 1;
+
+	for (i = 1; i < n + 1; i++)
+	{
+		for (j = 0; j < m; j++)
+		{
+			// 包括 S[j] 的方案数
+			x = (i - S[j] >= 0) ? table[i - S[j]][j] : 0;
+
+			// 不包括 S[j] 的方案数
+			y = (j >= 1) ? table[i][j - 1] : 0;
+
+			table[i][j] = x + y;
+		}
+	}
+	return table[n][m - 1];
+}
+
+int changeCoinsProDP(int S[], int m, int n)
+{
+	vector<int> table(m, 0);
+	//初始化基本情况
+	table[0] = 1;
+
+	for (int i = 0; i < m; i++)
+		for (int j = S[i]; j <= n; j++)
+			table[j] += table[j - S[i]];
+
+	return table[n];
+}
+
+int myChangeCoins(int arr[], int len, int index, int aim)
+{
+	int res = 0;
+	if (index == len)
+		res = aim == 0 ? 1 : 0;
+	else
+	{
+		for (int i = 0; i*arr[index] <= aim; i++)
+			res += myChangeCoins(arr, len, index + 1, aim - i*arr[index]);
+	}
+	return res;
+}
+
+int MyChangeCoinsDP(int arr[], int len, int aim)
+{
+	vector<vector<int> > dp(len, vector<int>(aim + 1));
+
+	// 初始化第一行index=0的情况
+	for (int j = 0; j < aim + 1; j++)
+		dp[0][j] = j%arr[0] == 0 ? 1 : 0;
+	// 初始化第一列aim=0的情况
+	for (int i = 0; i < len; i++)
+		dp[i][0] = 1;
+
+	for (int i = 1; i < len; i++)
+	{
+		for (int j = 1; j < aim + 1; j++)
+			dp[i][j] = dp[i - 1][j] + (j >= arr[i] ? dp[i][j - arr[i]] : 0);
+	}
+	return dp[len - 1][aim];
+}
+
+void testForchangeCoins()
+{
+	int arr[] = { 2,5,3,6 };
+	cout << changeCoins(arr, 4, 100) << "/" << changeCoinsDP(arr, 4, 100) << endl;
+	cout << myChangeCoins(arr, 4, 0, 100) << "/" << MyChangeCoinsDP(arr, 4, 100) << endl;
+}
+
+int getMatrixMinLen(const vector<vector<int> > &matrix)
+{
+	int rows = matrix.size();
+	int cols = matrix[0].size();
+
+	vector<vector<int> >dp(rows, vector<int>(cols));
+	dp[0][0] = matrix[0][0];
+
+	// 初始化第一行
+	for (int i = 1; i < cols; i++)
+		dp[0][i] = dp[0][i - 1] + matrix[0][i];
+	// 初始化第一列
+	for (int i = 1; i < rows; i++)
+		dp[i][0] = dp[i - 1][0] + matrix[i][0];
+
+	for (int i = 1; i < rows; i++)
+	{
+		for (int j = 1; j < cols; j++)
+			dp[i][j] = matrix[i][j] + min(dp[i - 1][j], dp[i][j - 1]);
+	}
+
+	for (auto row : dp)
+	{
+		for (auto num : row)
+			cout << num << "\t";
+		cout << endl;
+	}
+	return dp[rows - 1][cols - 1];
+}
+void testForMatrixMinLen()
+{
+	vector<vector<int> > matrix;
+	matrix.push_back({ 1,3,5,9 });
+	matrix.push_back({ 8,1,3,4 });
+	matrix.push_back({ 5,0,6,1 });
+	matrix.push_back({ 8,8,4,0 });
+	getMatrixMinLen(matrix);
+}
+
+#pragma endregion
+
 int main()
 {
 	//cout << strFind("asdfasdf", "sd") << endl;
 	//cout << isChangeWord("abcda", "bacdg") << endl;
 	//groupChangeWords({ "dcs", "csd", "cd", "c", "dc", "a", "zb", "dc", "c", "sdfsf" });
+	//testForchangeCoins();
+	testForMatrixMinLen();
 	system("pause");
 	return 0;
 }

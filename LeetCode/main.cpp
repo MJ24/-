@@ -178,6 +178,59 @@ void groupChangeWords(const vector<string> &strs)
 		cout << endl;
 	}
 }
+
+// 通用，将str从start到end的顺序逆序
+void reverseStr(string &str, int start, int end)
+{
+	while (start < end)
+	{
+		char tmp = str.at(start);
+		str.at(start) = str.at(end);
+		str.at(end) = tmp;
+		++start;
+		--end;
+	}
+}
+// 将str的最后index个字符移到前面来
+string moveStr(string str, int index)
+{
+	int size = str.size();
+	if (!size || index < 0) return str;
+	index %= size;
+	reverseStr(str, 0, size - 1);
+	reverseStr(str, 0, index - 1);
+	reverseStr(str, index, size - 1);
+	return str;
+}
+// 把s中单词的顺序逆序，而单词本身不逆序
+string reverseWordsInStr(string &s)
+{
+	int size = s.size();
+	if (!size) return s;
+	reverseStr(s, 0, size - 1);
+
+	// start不能置为0，因为index从0开始
+	int current = 0, start = -1;
+	while (current < size)
+	{
+		if (!isspace(s.at(current)) && start == -1)
+		{
+			start = current;
+		}
+		if (isspace(s.at(current)) && start != -1)
+		{
+			reverseStr(s, start, current - 1);
+			start = -1;
+		}
+		++current;
+	}
+	//处理当最后一个字符不是空格时最后一个单词还没反转
+	if (!isspace(s.at(size - 1)))
+	{
+		reverseStr(s, start, size - 1);
+	}
+	return s;
+}
 #pragma endregion
 
 #pragma region 栈相关

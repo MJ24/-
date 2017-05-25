@@ -549,6 +549,16 @@ int getTreeMaxDistance(TreeNode *root)
 #pragma endregion
 
 #pragma region 动态规划
+// 辅助函数，打印二维矩阵
+void printMatrix(const vector<vector<int> > &dp)
+{
+	for (auto row : dp)
+	{
+		for (auto num : row)
+			cout << num << "\t";
+		cout << endl;
+	}
+}
 // 上台阶
 int countSteps(int n)
 {
@@ -585,7 +595,6 @@ int changeCoins(int S[], int m, int n)
 	// 按照上面的递归函数
 	return changeCoins(S, m - 1, n) + changeCoins(S, m, n - S[m - 1]);
 }
-
 int changeCoinsDP(int S[], int m, int n)
 {
 	int i, j, x, y;
@@ -614,7 +623,6 @@ int changeCoinsDP(int S[], int m, int n)
 	}
 	return table[n][m - 1];
 }
-
 int changeCoinsProDP(int S[], int m, int n)
 {
 	vector<int> table(m, 0);
@@ -627,7 +635,6 @@ int changeCoinsProDP(int S[], int m, int n)
 
 	return table[n];
 }
-
 int myChangeCoins(int arr[], int len, int index, int aim)
 {
 	int res = 0;
@@ -640,7 +647,6 @@ int myChangeCoins(int arr[], int len, int index, int aim)
 	}
 	return res;
 }
-
 int MyChangeCoinsDP(int arr[], int len, int aim)
 {
 	vector<vector<int> > dp(len, vector<int>(aim + 1));
@@ -659,7 +665,6 @@ int MyChangeCoinsDP(int arr[], int len, int aim)
 	}
 	return dp[len - 1][aim];
 }
-
 void testForchangeCoins()
 {
 	int arr[] = { 2,5,3,6 };
@@ -667,6 +672,7 @@ void testForchangeCoins()
 	cout << myChangeCoins(arr, 4, 0, 100) << "/" << MyChangeCoinsDP(arr, 4, 100) << endl;
 }
 
+// 求矩阵左上角到右下角的最短带劝路径长度
 int getMatrixMinLen(const vector<vector<int> > &matrix)
 {
 	int rows = matrix.size();
@@ -688,12 +694,6 @@ int getMatrixMinLen(const vector<vector<int> > &matrix)
 			dp[i][j] = matrix[i][j] + min(dp[i - 1][j], dp[i][j - 1]);
 	}
 
-	for (auto row : dp)
-	{
-		for (auto num : row)
-			cout << num << "\t";
-		cout << endl;
-	}
 	return dp[rows - 1][cols - 1];
 }
 void testForMatrixMinLen()
@@ -706,6 +706,85 @@ void testForMatrixMinLen()
 	getMatrixMinLen(matrix);
 }
 
+// 最长公共子序列 eg:LCSubseq("1A2C3D4B56","B1D23CA45B6A")=6;
+int LCSubseq(const string &str1, const string &str2)
+{
+	int m = str1.size(), n = str2.size();
+	if (!m || !n) return 0;
+
+	vector<vector<int> > dp(m, vector<int>(n));
+	//初始化第一列
+	int i = 0;
+	//找到第str1中第一个等于str2[0]的i，i之前的dp值为0
+	for (; i != m; ++i)
+	{
+		if (str1.at(i) == str2[0])
+			break;
+		dp[i][0] = 0;
+	}
+	//i及其以后的dp值为1
+	for (; i != m; ++i)
+		dp[i][0] = 1;
+
+	//初始化第一行
+	int j = 0;
+	for (; j != n; ++j)
+	{
+		if (str2.at(j) == str1[0])
+			break;
+		dp[0][j] = 0;
+	}
+	for (; j != n; ++j)
+		dp[0][j] = 1;
+
+	for (int i = 1; i < m; i++)
+	{
+		for (int j = 1; j < n; j++)
+			dp[i][j] = str1.at(i) == str2.at(j) ? dp[i - 1][j - 1] + 1 : max(dp[i - 1][j], dp[i][j - 1]);
+	}
+
+	//printMatrix(dp);
+	return dp[m - 1][n - 1];
+}
+// 为dp矩阵多加一行一列方便统一处理第一行和第一列，还能处理str1或str2为空
+int LCSubseqPro(const string &str1, const string &str2)
+{
+	int len1 = str1.size(), len2 = str2.size();
+
+	vector<vector<int> > dp(len1 + 1, vector<int>(len2 + 1, 0));
+	// 从第二行第二列开始，第一行和第一列为初始值全0
+	for (int i = 1; i <= len1; i++)
+	{
+		for (int j = 1; j <= len2; j++)
+			// 注意比较的是str1[i - 1]和str2[j - 1]
+			dp[i][j] = str1.at(i - 1) == str2.at(j - 1) ? dp[i - 1][j - 1] + 1 : max(dp[i - 1][j], dp[i][j - 1]);
+	}
+
+	//printMatrix(dp);
+	return dp[len1][len2];
+}
+// 最长公共子串, 同上dp矩阵多加第一行第一列全0方便统一处理
+int LCSubStr(const string &str1, const string &str2)
+{
+	int len1 = str1.size(), len2 = str2.size();
+	int lcs = 0;
+	vector<vector<int> > dp(len1 + 1, vector<int>(len2 + 1));
+	// 从第二行第二列开始，第一行和第一列为初始值全0
+	for (int i = 1; i <= len1; i++)
+	{
+		for (int j = 1; j <= len2; j++)
+		{
+			// 注意比较的是str1[i - 1]和str2[j - 1]
+			if (str1.at(i - 1) == str2.at(j - 1))
+			{
+				dp[i][j] = dp[i - 1][j - 1] + 1;
+				lcs = max(lcs, dp[i][j]);
+			}
+		}
+	}
+	//printMatrix(dp);
+	return lcs;
+}
 #pragma endregion
 
 int main()
@@ -713,8 +792,7 @@ int main()
 	//cout << strFind("asdfasdf", "sd") << endl;
 	//cout << isChangeWord("abcda", "bacdg") << endl;
 	//groupChangeWords({ "dcs", "csd", "cd", "c", "dc", "a", "zb", "dc", "c", "sdfsf" });
-	//testForchangeCoins();
-	testForMatrixMinLen();
+	cout << LCSubStr("abcdedf", "fxwzbcdxxxcdezzzabxxedzzedf") << endl;
 	system("pause");
 	return 0;
 }

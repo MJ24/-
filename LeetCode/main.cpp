@@ -122,6 +122,7 @@ int strFind(string srcStr, string subStr)
 	}
 	return -1;
 }
+
 // 变形词问题，时间复杂度o(n)，空间复杂度o(1)
 bool isChangeWord(string s, string t)
 {
@@ -141,8 +142,8 @@ bool isChangeWord(string s, string t)
 
 	return true;
 }
-// 判断A是不是包含B的所有字符，B中的重复字符也要在A中至少出现那么多次
-// 假设B中都是大写字母
+
+// 判断A是不是包含B的所有字符，B中的重复字符也要在A中至少出现那么多次,假设B中都是大写字母
 bool isAContainsB(string A, string B)
 {
 	int m = A.size(), n = B.size();
@@ -160,6 +161,7 @@ bool isAContainsB(string A, string B)
 	}
 	return true;
 }
+
 // 将许多单词按照变形词分组输出，属于变形词的为一组
 void groupChangeWords(const vector<string> &strs)
 {
@@ -191,6 +193,7 @@ void reverseStr(string &str, int start, int end)
 		--end;
 	}
 }
+
 // 将str的最后index个字符移到前面来
 string moveStr(string str, int index)
 {
@@ -202,6 +205,7 @@ string moveStr(string str, int index)
 	reverseStr(str, index, size - 1);
 	return str;
 }
+
 // 把s中单词的顺序逆序，而单词本身不逆序
 string reverseWordsInStr(string &s)
 {
@@ -230,6 +234,95 @@ string reverseWordsInStr(string &s)
 		reverseStr(s, start, size - 1);
 	}
 	return s;
+}
+
+// 判断str是否为回文字符串，如"A man, a plan, a canal: Panama"
+bool isPalindromeStr(string &str)
+{
+	int start = 0, end = str.size() - 1;
+	while (start < end)
+	{
+		if (!isalnum(str.at(start)))
+		{
+			++start;
+			continue; //记得要跳出循环继续
+		}
+		if (!isalnum(str.at(end)))
+		{
+			--end;
+			continue;
+		}
+		// 相同则分别++ --往中间继续比较
+		if (tolower(str.at(start++)) != tolower(str.at(end--)))
+			return false;
+	}
+	return true;
+}
+
+// 最长回文子串
+bool isPalindromeSubStr(const string &str, int start, int end)
+{
+	if (start < 0) return false;
+	while (start < end)
+	{
+		if (str.at(start++) != str.at(end--))
+			return false;
+	}
+	return true;
+}
+string longestPalindrome(string s) {
+	int len = s.size();
+	if (len < 2) return s;
+	int subStart = 0, subLen = 1;
+
+	for (int i = 1; i < len; i++)
+	{
+		if (isPalindromeSubStr(s, i - subLen - 1, i))
+		{
+			subStart = i - subLen - 1;
+			subLen += 2;
+		}
+		else if (isPalindromeSubStr(s, i - subLen, i))
+		{
+			subStart = i - subLen;
+			++subLen;
+		}
+	}
+	return s.substr(subStart, subLen);
+}
+string longestPalindrome2(string s) {
+	int len = s.size();
+	if (len < 2) return s;
+	int subStart = 0, subLen = 1;
+
+	for (int i = 0; i < len - subLen / 2; i++)
+	{
+		// 寻找以i为中心的奇数长度的最长回文子串
+		int l = i, r = i;
+		while (l >= 0 && r < len&&s.at(l) == s.at(r))
+		{
+			--l;
+			++r;
+		}
+		if (r - l - 1 > subLen) //出了上面的循环后l和r都已经各多走了一步
+		{
+			subStart = l + 1;
+			subLen = r - l - 1;
+		}
+		// 寻找以i为中心的偶数长度的最长回文子串
+		l = i, r = i + 1;
+		while (l >= 0 && r < len&&s.at(l) == s.at(r))
+		{
+			--l;
+			++r;
+		}
+		if (r - l - 1 > subLen)
+		{
+			subStart = l + 1;
+			subLen = r - l - 1;
+		}
+	}
+	return s.substr(subStart, subLen);
 }
 #pragma endregion
 
@@ -667,7 +760,7 @@ int MyChangeCoinsDP(int arr[], int len, int aim)
 }
 void testForchangeCoins()
 {
-	int arr[] = { 2,5,3,6 };
+	int arr[] = { 2, 5, 3, 6 };
 	cout << changeCoins(arr, 4, 100) << "/" << changeCoinsDP(arr, 4, 100) << endl;
 	cout << myChangeCoins(arr, 4, 0, 100) << "/" << MyChangeCoinsDP(arr, 4, 100) << endl;
 }
@@ -699,11 +792,31 @@ int getMatrixMinLen(const vector<vector<int> > &matrix)
 void testForMatrixMinLen()
 {
 	vector<vector<int> > matrix;
-	matrix.push_back({ 1,3,5,9 });
-	matrix.push_back({ 8,1,3,4 });
-	matrix.push_back({ 5,0,6,1 });
-	matrix.push_back({ 8,8,4,0 });
+	matrix.push_back({ 1, 3, 5, 9 });
+	matrix.push_back({ 8, 1, 3, 4 });
+	matrix.push_back({ 5, 0, 6, 1 });
+	matrix.push_back({ 8, 8, 4, 0 });
 	getMatrixMinLen(matrix);
+}
+
+//最长递增子序列
+int LISubSeq(int arr[], int len)
+{
+	int lisLen = 1;
+	//dp[i]表示以arr[i]结尾的lcs的长度
+	vector<int> dp(len, 1);
+	for (int i = 1; i != len; ++i)
+	{
+		//dp[i]是所有j从[0~i-1]中arr[j]<arr[i]的数中，dp[j]最大的+1
+		for (int j = 0; j < i; j++)
+		{
+			if (arr[j] <= arr[i] && dp[j] > dp[i] - 1)
+				dp[i] = dp[j] + 1;
+		}
+		if (dp[i] > lisLen)
+			lisLen = dp[i];
+	}
+	return lisLen;
 }
 
 // 最长公共子序列 eg:LCSubseq("1A2C3D4B56","B1D23CA45B6A")=6;
@@ -792,7 +905,6 @@ int main()
 	//cout << strFind("asdfasdf", "sd") << endl;
 	//cout << isChangeWord("abcda", "bacdg") << endl;
 	//groupChangeWords({ "dcs", "csd", "cd", "c", "dc", "a", "zb", "dc", "c", "sdfsf" });
-	cout << LCSubStr("abcdedf", "fxwzbcdxxxcdezzzabxxedzzedf") << endl;
 	system("pause");
 	return 0;
 }

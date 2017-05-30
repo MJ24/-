@@ -108,6 +108,13 @@ void printTwoOddNum(const vector<int> &vec)
 #pragma endregion
 
 #pragma region 数组
+// 辅助，打印vector
+void printIntVec(const vector<int> &vec)
+{
+	for (auto num : vec)
+		cout << num << " ";
+	cout << endl;
+}
 // 通用，将数组从start到end的元素逆序
 void reverseArr(int arr[], int start, int end)
 {
@@ -170,6 +177,27 @@ vector<int> subarraySumPro(vector<int> nums)
 	}
 	return vector<int>{0, 0};
 }
+// 找出数组中和为target的两个数的下标，和上提不同的是就是这两个数而不是区间
+vector<int> twoSum(vector<int> &nums, int target) {
+	vector<int> result;
+	const int length = nums.size();
+	if (0 == length) {
+		return result;
+	}
+	// first value, second index
+	unordered_map<int, int> hash(length);
+	for (int i = 0; i != length; ++i) {
+		if (hash.find(target - nums[i]) != hash.end()) {
+			result.push_back(hash[target - nums[i]]);
+			result.push_back(i);
+			return result;
+		}
+		else {
+			hash[nums[i]] = i;
+		}
+	}
+	return result;
+}
 
 // 将旋转过的有序数组还原
 void recoverRotatedSortedArray(int arr[], int length)
@@ -185,6 +213,63 @@ void recoverRotatedSortedArray(int arr[], int length)
 		reverseArr(arr, recPoint + 1, length - 1);
 		reverseArr(arr, 0, length - 1);
 	}
+}
+
+// 用数组nums生成新的数组，新数组的每个元素为原数组中除他之外的所有元素乘积
+//要求不能用除法操作
+vector<long long> productExcludeItself(vector<int> &nums) {
+	const int nums_size = nums.size();
+	vector<long long> result(nums_size, 1);
+	// solve the left part first
+	for (int i = 1; i < nums_size; ++i) {
+		result[i] = result[i - 1] * nums[i - 1];
+	}
+	// solve the right part
+	long long temp = 1;
+	for (int i = nums_size - 1; i >= 0; --i) {
+		result[i] *= temp;
+		temp *= nums[i];
+	}
+	return result;
+}
+
+// 将数组按照值k进行分区，i及其以后的数都大于等于k，返回i，若都小于i返回size
+int partitionArray(vector<int> &nums, int k) {
+	int left = 0, right = nums.size() - 1;
+	while (left <= right) {
+		while (left <= right && nums[left] < k) ++left;
+		while (left <= right && nums[right] >= k) --right;
+		if (left <= right) {
+			int temp = nums[left];
+			nums[left] = nums[right];
+			nums[right] = temp;
+			++left;
+			--right;
+		}
+	}
+	return left;
+}
+
+// 找到数组中第一个缺了的正整数
+int firstMissingPositive(vector<int> arr)
+{
+	const int size = arr.size();
+	for (int i = 0; i < size; ++i)
+	{
+		while (arr[i] > 0 && arr[i] <= size && \
+			(arr[i] != i + 1) && (arr[i] != arr[arr[i] - 1]))
+		{
+			int temp = arr[arr[i] - 1];
+			arr[arr[i] - 1] = arr[i];
+			arr[i] = temp;
+		}
+	}
+	for (int i = 0; i < size; ++i)
+	{
+		if (arr[i] != i + 1)
+			return i + 1;
+	}
+	return size + 1;
 }
 #pragma endregion
 
@@ -1041,14 +1126,14 @@ int LCSubStr(const string &str1, const string &str2)
 }
 #pragma endregion
 
-
 int main()
 {
 	//cout << strFind("asdfasdf", "sd") << endl;
 	//cout << isChangeWord("abcda", "bacdg") << endl;
 	//groupChangeWords({ "dcs", "csd", "cd", "c", "dc", "a", "zb", "dc", "c", "sdfsf" });
 
-	cout << "" << endl;
+	printIntVec(twoSum(vector<int>{1, 2, 3, 4}, 4));
+	printIntVec(twoSum(vector<int>{1, 4, 3, 4, 5}, 9));
 	system("pause");
 	return 0;
 }

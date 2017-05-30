@@ -107,7 +107,101 @@ void printTwoOddNum(const vector<int> &vec)
 }
 #pragma endregion
 
+#pragma region 数组
+// 通用，将数组从start到end的元素逆序
+void reverseArr(int arr[], int start, int end)
+{
+	while (start < end)
+	{
+		arr[start] ^= arr[end];
+		arr[end] ^= arr[start];
+		arr[start] ^= arr[end];
+		++start;
+		--end;
+	}
+}
+
+// 移除数组中某值的元素，返回新数组长度，数组中原数据顺序可变
+int removeElemInArray(vector<int> &nums, int val)
+{
+	// right指向新数组最后一个元素的下一位
+	int right = nums.size();
+	for (int i = 0; i < right; i++)
+	{
+		if (nums[i] == val)
+		{
+			nums[i] = nums[--right];
+			--i; //从后面挖过来填新坑的数也要同样比较一次
+		}
+	}
+	return right;
+}
+
+// 找出数组中和为0的子数组的首尾下标，找出一个子数组即可
+vector<int> subarraySum(vector<int> &nums)
+{
+	int currSum = 0;
+	unordered_map<int, int> umap;
+	for (int i = 0; i < nums.size(); i++)
+	{
+		currSum += nums[i];
+		if (currSum == 0)
+			return vector<int>{0, i};
+		if (umap.find(currSum) != umap.end())
+			return vector<int>{umap[currSum] + 1, i};
+		else
+			umap[currSum] = i;
+	}
+	return vector<int>{0, 0};
+}
+// 用多加umap[0] = 0使得每次循环少一个判断currSum是否为0
+vector<int> subarraySumPro(vector<int> nums)
+{
+	int currSum = 0;
+	unordered_map<int, int> umap;
+	umap[0] = 0;
+	for (int i = 0; i < nums.size(); i++)
+	{
+		currSum += nums[i];
+		if (umap.find(currSum) != umap.end())
+			return vector<int>{umap[currSum], i};//原来为umap[currSum]+1
+		else
+			umap[currSum] = i + 1;//原来为umap[currSum] = i
+	}
+	return vector<int>{0, 0};
+}
+
+// 将旋转过的有序数组还原
+void recoverRotatedSortedArray(int arr[], int length)
+{
+	if (length < 2) return;
+	//先找到数组有序的破坏点
+	int recPoint = 0;
+	while (recPoint < length - 1 && arr[recPoint] <= arr[recPoint + 1])
+		recPoint++;
+	if (recPoint < length - 1)
+	{
+		reverseArr(arr, 0, recPoint);
+		reverseArr(arr, recPoint + 1, length - 1);
+		reverseArr(arr, 0, length - 1);
+	}
+}
+#pragma endregion
+
 #pragma region 字符串
+// 通用，将str从start到end的顺序逆序
+void reverseStr(string &str, int start, int end)
+{
+	while (start < end)
+	{
+		char tmp = str.at(start);
+		str.at(start) = str.at(end);
+		str.at(end) = tmp;
+		++start;
+		--end;
+	}
+}
+
 // 从srcStr中找到第一次出现的subStr的位置
 int strFind(string srcStr, string subStr)
 {
@@ -178,19 +272,6 @@ void groupChangeWords(const vector<string> &strs)
 		for (string str : strsPair.second)
 			cout << str << " ";
 		cout << endl;
-	}
-}
-
-// 通用，将str从start到end的顺序逆序
-void reverseStr(string &str, int start, int end)
-{
-	while (start < end)
-	{
-		char tmp = str.at(start);
-		str.at(start) = str.at(end);
-		str.at(end) = tmp;
-		++start;
-		--end;
 	}
 }
 
@@ -323,6 +404,66 @@ string longestPalindrome2(string s) {
 		}
 	}
 	return s.substr(subStart, subLen);
+}
+
+// 字符串通配符匹配
+bool isStrMatch(const char *s, const char *p) {
+	const char* star = NULL;
+	const char* ss = s;
+	while (*s) {
+		//advancing both pointers when (both characters match) or ('?' found in pattern)
+		//note that *p will not advance beyond its length 
+		if ((*p == '?') || (*p == *s)) { s++; p++; continue; }
+
+		// * found in pattern, track index of *, only advancing pattern pointer 
+		if (*p == '*') { star = p++; ss = s; continue; }
+
+		//current characters didn't match, last pattern pointer was *, current pattern pointer is not *
+		//only advancing pattern pointer
+		if (star) { p = star + 1; s = ++ss; continue; }
+
+		//current pattern pointer is not star, last patter pointer was not *
+		//characters do not match
+		return false;
+	}
+
+	//check for remaining characters in pattern
+	while (*p == '*') { p++; }
+
+	return !*p;
+}
+bool isStrMatch2(string s, string p) {
+	int star = 0, ss = 0, i = 0, j = 0;
+	while (s[i]) {
+		if (p[j] == '?' || p[j] == s[i]) { j++; i++; continue; }
+		if (p[j] == '*') { star = ++j; ss = i; continue; }
+		if (star) { j = star; i = ++ss; continue; }
+		return false;
+	}
+	while (p[j] == '*') j++;
+	return !p[j];
+
+}
+
+string countAndSay(int n)
+{
+	if (n == 1) return "1";
+	string lastStr = countAndSay(n - 1) + '#';
+	int count = 0;
+	char c = lastStr[0];
+	ostringstream res;
+	for (int i = 0; i < lastStr.size(); i++)
+	{
+		if (lastStr.at(i) == c)
+			++count;
+		else
+		{
+			res << count << c;
+			c = lastStr.at(i);
+			count = 1;
+		}
+	}
+	return res.str();
 }
 #pragma endregion
 
@@ -900,11 +1041,14 @@ int LCSubStr(const string &str1, const string &str2)
 }
 #pragma endregion
 
+
 int main()
 {
 	//cout << strFind("asdfasdf", "sd") << endl;
 	//cout << isChangeWord("abcda", "bacdg") << endl;
 	//groupChangeWords({ "dcs", "csd", "cd", "c", "dc", "a", "zb", "dc", "c", "sdfsf" });
+
+	cout << "" << endl;
 	system("pause");
 	return 0;
 }

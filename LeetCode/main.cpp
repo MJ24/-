@@ -6,6 +6,8 @@
 #include <vector>
 #include <map>
 #include <unordered_map>
+#include <fstream>
+#include <limits>
 using namespace std;
 
 #pragma region 树的辅助函数
@@ -16,9 +18,11 @@ struct TreeNode {
 	TreeNode(int x) : val(x), left(NULL), right(NULL) {}
 };
 // 按输入创建一棵二叉搜索树
-TreeNode* createTree()
+TreeNode* createSearchTree()
 {
-	TreeNode* root = 0;
+	std::cout << "请输入搜索二叉树的节点，"
+		"以空格或回车间隔，以Ctrl+z并回车结束\n";
+	TreeNode* root = nullptr;
 	for (int n; cin >> n;)
 	{
 		TreeNode** parent = &root;
@@ -37,6 +41,31 @@ TreeNode* createTree()
 			}
 		}
 		*parent = new TreeNode(n);
+	}
+	return root;
+}
+TreeNode* createSearchTree(const std::string &nodeVals)
+{
+	TreeNode* root = nullptr;
+	for (char nodeValChar : nodeVals)
+	{
+		int nodeVal = nodeValChar - '0';
+		TreeNode **parent = &root;
+		TreeNode *cur = root;
+		while (cur)
+		{
+			if (nodeVal < cur->val)
+			{
+				parent = &(cur->left);
+				cur = cur->left;
+			}
+			else
+			{
+				parent = &(cur->right);
+				cur = cur->right;
+			}
+		}
+		*parent = new TreeNode(nodeVal);
 	}
 	return root;
 }
@@ -330,10 +359,10 @@ bool isAContainsB(string A, string B)
 
 	int charArr[26] = { 0 };
 
-	for (int i = 0; i != n; ++i)
+	for (int i = 0; i != m; ++i)
 		++charArr[A.at(i) - 'A'];
 
-	for (int i = 0; i != m; ++i)
+	for (int i = 0; i != n; ++i)
 	{
 		--charArr[B.at(i) - 'A'];
 		if (charArr[B.at(i) - 'A'] < 0) return false;
@@ -373,37 +402,31 @@ string moveStr(string str, int index)
 }
 
 // 把s中单词的顺序逆序，而单词本身不逆序
-string reverseWordsInStr(string &s)
+void reverseWords()
 {
-	int size = s.size();
-	if (!size) return s;
-	reverseStr(s, 0, size - 1);
-
-	// start不能置为0，因为index从0开始
-	int current = 0, start = -1;
-	while (current < size)
+	string str;
+	while (getline(cin, str))
 	{
-		if (!isspace(s.at(current)) && start == -1)
+		int start = 0, cur = 0, sz = str.size();
+		while (start < sz)
 		{
-			start = current;
+			while (start < sz && isspace(str[start]))
+				++start;
+			cur = start;
+			while (cur < sz && !isspace(str[cur]))
+				++cur;
+			if (cur == sz - 1 && !isspace(str[cur]))
+				reverseStr(str, start, cur);
+			else
+				reverseStr(str, start, cur - 1);
+			start = cur + 1;
 		}
-		if (isspace(s.at(current)) && start != -1)
-		{
-			reverseStr(s, start, current - 1);
-			start = -1;
-		}
-		++current;
+		cout << str << endl;
 	}
-	//处理当最后一个字符不是空格时最后一个单词还没反转
-	if (!isspace(s.at(size - 1)))
-	{
-		reverseStr(s, start, size - 1);
-	}
-	return s;
 }
 
 // 判断str是否为回文字符串，如"A man, a plan, a canal: Panama"
-bool isPalindromeStr(string &str)
+bool isPalindromeStr(const string &str)
 {
 	int start = 0, end = str.size() - 1;
 	while (start < end)
@@ -420,6 +443,20 @@ bool isPalindromeStr(string &str)
 		}
 		// 相同则分别++ --往中间继续比较
 		if (tolower(str.at(start++)) != tolower(str.at(end--)))
+			return false;
+	}
+	return true;
+}
+bool isPalindromeStrPro(const string &str)
+{
+	int start = 0, end = str.size() - 1;
+	while (start < end)
+	{
+		while (start < end && !isalpha(str[start]))
+			++start;
+		while (start < end && !isalpha(str[end]))
+			--end;
+		if (start < end && tolower(str[start++]) != tolower(str[end--]))
 			return false;
 	}
 	return true;
@@ -690,14 +727,14 @@ double getPostExpVal(const string &exp)
 bool isValidExp(const string &exp)
 {
 	stack<char> stk;
-	for (size_t i = 0; i < exp.size(); i++)
+	for (auto c : exp)
 	{
-		switch (exp.at(i))
+		switch (c)
 		{
 		case '(':
 		case '[':
 		case '{':
-			stk.push(exp.at(i));
+			stk.push(c);
 			break;
 		case ')':
 			if (stk.empty() || stk.top() != '(')
@@ -729,6 +766,82 @@ void testStack()
 	cout << "()[{}的匹配结果为：" << isValidExp("()[{}") << endl;
 	cout << "([{}])的匹配结果为：" << isValidExp("([{}])") << endl;
 }
+
+//两个栈实现一个队列
+template<class T>
+class MyQue
+{
+public:
+	void push(const T &elem) { stkIn.push(elem); }
+	void pop()
+	{
+		inToOut();
+		stkOut.pop();
+	}
+	const T &front()
+	{
+		inToOut();
+		return stkOut.top();
+	}
+	const T &back()
+	{
+		outToIn();
+		return stkIn.top();
+	}
+private:
+	stack<T> stkIn;
+	stack<T> stkOut;
+	void inToOut()
+	{
+		while (!stkIn.empty())
+		{
+			stkOut.push(stkIn.top());
+			stkIn.pop();
+		}
+	}
+	void outToIn()
+	{
+		while (!stkOut.empty())
+		{
+			stkIn.push(stkOut.top());
+			stkOut.pop();
+		}
+	}
+};
+
+//两个队列实现一个栈
+template<class T>
+class MyStack
+{
+public:
+	void push(const T &elem)
+	{
+		queue<T> &sourceQue = que1.empty() ? que2 : que1;
+		sourceQue.push(elem);
+	}
+	void pop()
+	{
+		queue<T> &sourceQue = que1.empty() ? que2 : que1;
+		queue<T> &tmpQue = que1.empty() ? que1 : que2;
+		while (!sourceQue.empty())
+		{
+			T tmp = sourceQue.front();
+			sourceQue.pop();
+			if (!sourceQue.empty())
+			{
+				tmpQue.push(tmp);
+			}
+		}
+	}
+	const T &top() const
+	{
+		const queue<T> &sourceQue = que1.empty() ? que2 : que1;
+		return sourceQue.back();
+	}
+private:
+	queue<T> que1;
+	queue<T> que2;
+};
 #pragma endregion
 
 #pragma region 树相关
@@ -778,6 +891,81 @@ bool isBalanceTree(TreeNode* root)
 	else
 		return false;
 	return abs(lh - rh) < 2;
+}
+bool isSearchTree(TreeNode* root)
+{
+	TreeNode *cur = root;
+	stack<TreeNode *> stk;
+	int preVal = INT_MIN;
+	while (cur || !stk.empty())
+	{
+		while (cur)
+		{
+			stk.push(cur);
+			cur = cur->left;
+		}
+		if (!stk.empty())
+		{
+			if (stk.top()->val < preVal)
+				return false;
+			cur = stk.top()->right;
+			preVal = stk.top()->val;
+			stk.pop();
+		}
+	}
+	return true;
+}
+string findWrongNodes(TreeNode* root)
+{
+	TreeNode *cur = root;
+	stack<TreeNode *> stk;
+	int preVal = INT_MIN;
+	string ret;
+	int firstDropNum = 0;
+	while (cur || !stk.empty())
+	{
+		while (cur)
+		{
+			stk.push(cur);
+			cur = cur->left;
+		}
+		if (!stk.empty())
+		{
+			int curVal = stk.top()->val;
+			if (curVal < preVal)
+			{
+				if (ret.empty()) // first meet wrong num
+				{
+					firstDropNum = curVal;
+					ret = to_string(preVal);
+				}
+				else
+					return ret + "," + to_string(curVal);
+			}
+			cur = stk.top()->right;
+			preVal = curVal;
+			stk.pop();
+		}
+	}
+	// drop only once, adjacent wrong nums
+	return ret + "," + to_string(firstDropNum);
+}
+void testSearchTree()
+{
+	TreeNode* root = createSearchTree("4236751");
+	printTree(root);
+	cout << isSearchTree(root) << endl << endl;
+	root->val = 3;
+	root->left->right->val = 4;
+	printTree(root);
+	cout << isSearchTree(root) << endl;
+	cout << findWrongNodes(root) << endl << endl;
+	root->left->right->val = 3;
+	root->val = 6;
+	root->right->val = 4;
+	printTree(root);
+	cout << isSearchTree(root) << endl;
+	cout << findWrongNodes(root) << endl;
 }
 
 // 求搜索二叉树中两个节点的最近祖先节点
@@ -889,15 +1077,12 @@ int countStepsDP(int n)
 {
 	if (n < 1) return 0;
 	if (n == 1 || n == 2) return n;
-
-	int *steps = new int[n] {1, 2};
-
-	for (int i = 2; i != n; ++i)
+	int *steps = new int[n + 1]{ 0, 1, 2 };//注意申请n+1的长度才能表示steps[n]
+	for (int i = 3; i <= n; i++)
 		steps[i] = steps[i - 1] + steps[i - 2];
-
-	int res = steps[n - 1]; //注意这里是n-1
+	int ret = steps[n];
 	delete[] steps;
-	return res;
+	return ret;
 }
 
 // 硬币凑整，给定各种面值的硬币存在数组arr中，求组成aim价值的钱有多少种组合
@@ -962,7 +1147,7 @@ int myChangeCoins(int arr[], int len, int index, int aim)
 	else
 	{
 		for (int i = 0; i*arr[index] <= aim; i++)
-			res += myChangeCoins(arr, len, index + 1, aim - i*arr[index]);
+			res += myChangeCoins(arr, len, index + 1, aim - i * arr[index]);
 	}
 	return res;
 }
@@ -972,7 +1157,7 @@ int MyChangeCoinsDP(int arr[], int len, int aim)
 
 	// 初始化第一行index=0的情况
 	for (int j = 0; j < aim + 1; j++)
-		dp[0][j] = j%arr[0] == 0 ? 1 : 0;
+		dp[0][j] = j % arr[0] == 0 ? 1 : 0;
 	// 初始化第一列aim=0的情况
 	for (int i = 0; i < len; i++)
 		dp[i][0] = 1;
@@ -1128,12 +1313,8 @@ int LCSubStr(const string &str1, const string &str2)
 
 int main()
 {
-	//cout << strFind("asdfasdf", "sd") << endl;
-	//cout << isChangeWord("abcda", "bacdg") << endl;
-	//groupChangeWords({ "dcs", "csd", "cd", "c", "dc", "a", "zb", "dc", "c", "sdfsf" });
+	testSearchTree();
 
-	printIntVec(twoSum(vector<int>{1, 2, 3, 4}, 4));
-	printIntVec(twoSum(vector<int>{1, 4, 3, 4, 5}, 9));
 	system("pause");
 	return 0;
 }
